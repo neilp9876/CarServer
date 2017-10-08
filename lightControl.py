@@ -119,7 +119,7 @@ class FlashingThread(threading.Thread):
                     TurnLightsOnImmediate(LEFT_INDICATOR)
                     TurnLightsOnImmediate(RIGHT_INDICATOR)
                 else:
-                    TurnLightsOn(self.led)
+                    TurnLightsOnImmediate(self.led)
                 lightOn = 1
             else:
                 #print "Lights Off"
@@ -127,7 +127,7 @@ class FlashingThread(threading.Thread):
                     TurnLightsOffImmediate(LEFT_INDICATOR)
                     TurnLightsOffImmediate(RIGHT_INDICATOR)
                 else:
-                    TurnLightsOff(self.led)
+                    TurnLightsOffImmediate(self.led)
                 lightOn = 0
             
       
