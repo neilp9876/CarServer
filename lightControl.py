@@ -112,7 +112,7 @@ class FlashingThread(threading.Thread):
         lightOn = 0
         while not self.stopped.wait(0.5):
             if lightOn == 0:
-                print "Lights On"
+                #print "Lights On"
                 if self.led == HAZARDS:
                     TurnLightsOnImmediate(LEFT_INDICATOR)
                     TurnLightsOnImmediate(RIGHT_INDICATOR)
@@ -120,7 +120,7 @@ class FlashingThread(threading.Thread):
                     TurnLightsOn(self.led)
                 lightOn = 1
             else:
-                print "Lights Off"
+                #print "Lights Off"
                 if self.led == HAZARDS:
                     TurnLightsOffImmediate(LEFT_INDICATOR)
                     TurnLightsOffImmediate(RIGHT_INDICATOR)
