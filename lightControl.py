@@ -99,6 +99,8 @@ def FlashLightsOff(led):
         print "Stopping flash on %d" % led
         event = StopFlashing(led)
         event.set()
+        TurnLightsOffImmediate(LEFT_INDICATOR)
+        TurnLightsOffImmediate(RIGHT_INDICATOR)        
     else:
         print "Not flashing on %d, ignoring" % led
 
