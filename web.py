@@ -69,6 +69,8 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			lightControl.TurnLightsOff(lightControl.FOGLIGHT)
 
                 # SERVO CONTROL
+		GearPulse = 2
+		
 		if s.path == "/Forward?ON":
 			print "MOVING FORWARD"
 			lightControl.TurnLightsOff(lightControl.BRAKELIGHT)
@@ -76,7 +78,16 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		elif s.path == "/Forward?OFF":
 			print "Turning off FORWARD"
 			lightControl.TurnLightsOn(lightControl.BRAKELIGHT)
-
+		elif s.path == "Gear_up?OFF"
+			GearPulse = GearPulse + 1
+			if GearPulse > 3:
+				GearPulse = 3
+			print "Gear changing up - %s" % (GearPulse)
+		elif s.Path  == "Gear_down?OFF"
+			GearPulse = GearPulse - 1
+			if GearPulse < 1:
+				GearPulse = 1
+			print "Gear changing up - %s" % (GearPulse)
 		print s.path
 
 
