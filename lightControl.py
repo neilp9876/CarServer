@@ -24,11 +24,22 @@ FOGLIGHT = 9
 TAILLIGHT = 10
 BRAKELIGHT = 11
 
-GEAR_SERVO = 15
-THROTTLE_SERVO = 12
-STEERING_SERVO = 13 # Need another pin!!!
+GEAR_SERVO = 12
+THROTTLE_SERVO = 14
+STEERING_SERVO = 13
 
 HAZARDS = 99
+
+CENTER = 5
+DIRECTION_CENTRE = 195.0
+DIRECTION_MIN = 120.0
+DIRECTION_MAX = 270.0
+
+GEAR_1 = 170
+GEAR_2 = 220
+GEAR_3 = 400
+
+currentDirection = 190.0
 
 def setServoPulse(channel, pulse):
   pulseLength = 1000000                   # 1,000,000 us per second
@@ -41,21 +52,27 @@ def setServoPulse(channel, pulse):
   pwm.setPWM(channel, 0, pulse)
 
 def Initialise():
-    pwm.setPWMFreq(5000)                        # Set frequency to 60 Hz
+    currentDirection = 190
+    pwm.setPWMFreq(5)
+
     for x in range(0, 15):
         pwm.setPWM(x, 0, 0)
+    ChangeGear(1)
+    Steer(CENTER)
     
 def TurnLightsOn(led):
-    intensity = 0
-    while (intensity < lightMax):
-        intensity = intensity + 10
-        pwm.setPWM(led, 0, intensity)
+    TurnLightsOnImmediate(led)
+#    intensity = 0
+#    while (intensity < lightMax):
+#        intensity = intensity + 10
+#        pwm.setPWM(led, 0, intensity)
 
 def TurnLightsOff(led):
-    intensity = lightMax
-    while (intensity > 0):
-        intensity = intensity - 10
-        pwm.setPWM(led, 0, intensity)
+    TurnLightsOffImmediate(led)
+#    intensity = lightMax
+#    while (intensity > 0):
+#        intensity = intensity - 10
+#        pwm.setPWM(led, 0, intensity)
 
 def TurnLightsOnImmediate(led):
     pwm.setPWM(led, 0, lightMax)
@@ -130,8 +147,41 @@ class FlashingThread(threading.Thread):
                     TurnLightsOffImmediate(self.led)
                 lightOn = 0
             
-      
+def ChangeGear(gearPos):
 
+  if gearPos == 1:
+    pwm.setPWM(GEAR_SERVO, 0, GEAR_1)
+  elif gearPos == 2:
+    pwm.setPWM(GEAR_SERVO, 0, GEAR_2)
+  elif gearPos == 3:
+    pwm.setPWM(GEAR_SERVO, 0, GEAR_3)
+
+def Steer(direction):
+  global currentDirection
+
+  # direction is range between 1 to 9
+  
+  if direction == CENTER:
+    currentDirection = DIRECTION_CENTRE
+  else:
+    # calculate iteration amount
+    iteration = (DIRECTION_MAX - DIRECTION_MIN) / 8.0
+    
+    currentDirection = (iteration * (direction - 1.0)) + DIRECTION_MIN
+
+    # Check limits
+    if currentDirection < DIRECTION_MIN:
+      currentDirection = DIRECTION_MIN
+    elif currentDirection > DIRECTION_MAX:
+      currentDirection = DIRECTION_MAX
+
+  # Set the servo
+  print "Direction = %d" % currentDirection
+  pwm.setPWM(STEERING_SERVO, 0, int(currentDirection))
+    
+  
+    
+    
 
 """
 while (True):
