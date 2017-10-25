@@ -10,8 +10,8 @@ pwm = PWM(0x40)
 # Note if you'd like more debug output you can instead run:
 #pwm = PWM(0x40, debug=True)
 
-servoMin = 150  # Min pulse length out of 4096
-servoMax = 4000  # Max pulse length out of 4096
+#servoMin = 150  # Min pulse length out of 4096
+#servoMax = 4000  # Max pulse length out of 4096
 lightMax = 4000
 
 HEADLIGHT = 4
@@ -27,36 +27,63 @@ BRAKELIGHT = 11
 GEAR_SERVO = 12
 THROTTLE_SERVO = 14
 STEERING_SERVO = 13
+TEST_SERVO = 15
 
 HAZARDS = 99
-
-CENTER = 5
-DIRECTION_CENTRE = 195.0
-DIRECTION_MIN = 120.0
-DIRECTION_MAX = 270.0
 
 GEAR_1 = 170
 GEAR_2 = 220
 GEAR_3 = 400
 
+CENTER = 5  # Direction is based on a range of 1 to 9. 5 is centre
 currentDirection = 190.0
 
+SERVO_MIN = 460  # Min pulse length, us (tick 184/4096)
+SERVO_MAX = 2100  # Max pulse length, us  (tick 430/4096)
+SERVO_MID = SERVO_MAX - ((SERVO_MAX - SERVO_MIN)/2) # Midpoint pulse length, us
+FREQUENCY = 50 # cycle length, Hz
+
+pulseLength = 1000000 / FREQUENCY
+tick = pulseLength / 4096 # 12 bit resolution
+
+# we need to convert us pulses to 12 bit ticks
 def setServoPulse(channel, pulse):
-  pulseLength = 1000000                   # 1,000,000 us per second
-  pulseLength /= 60                       # 60 Hz
-  print "%d us per period" % pulseLength
-  pulseLength /= 4096                     # 12 bits of resolution
-  print "%d us per bit" % pulseLength
-  pulse *= 1000
-  pulse /= pulseLength
-  pwm.setPWM(channel, 0, pulse)
+  print "%d pulse, %d tick" % (pulse, tick)
+  pwm.setPWM(channel, 0, pulse/tick)
+
+#pwm.setPWMFreq(cycle) # Set frequency
+
+#while (True):
+  # cycle servo
+#  print "%d pulse" % pulse
+#  setServoPulse(TEST_SERVO, pulse)
+#  time.sleep(1)
+#  pulse += 20
+#  setServoPulse(TEST_SERVO, servoMin)
+#  time.sleep(1)
+#  setServoPulse(TEST_SERVO, servoMid)
+#  time.sleep(1)
+#  setServoPulse(TEST_SERVO, servoMax)
+#  time.sleep(1)
+
+
+#def setServoPulse(channel, pulse):
+#  pulseLength = 1000000                   # 1,000,000 us per second
+#  pulseLength /= 50                       # 50 Hz
+#  print "%d us per period" % pulseLength
+#  pulseLength /= 4096                     # 12 bits of resolution - 1 tick
+#  print "%d us per bit" % pulseLength
+#  pulse *= 1000
+#  pulse /= pulseLength
+#  pwm.setPWM(channel, 0, pulse)
 
 def Initialise():
     currentDirection = 190
-    pwm.setPWMFreq(5)
+    pwm.setPWMFreq(FREQUENCY)
 
-    for x in range(0, 15):
+    for x in range(0, 11):
         pwm.setPWM(x, 0, 0)
+        
     ChangeGear(1)
     Steer(CENTER)
     
@@ -148,13 +175,15 @@ class FlashingThread(threading.Thread):
                 lightOn = 0
             
 def ChangeGear(gearPos):
-
-  if gearPos == 1:
-    pwm.setPWM(GEAR_SERVO, 0, GEAR_1)
-  elif gearPos == 2:
-    pwm.setPWM(GEAR_SERVO, 0, GEAR_2)
-  elif gearPos == 3:
-    pwm.setPWM(GEAR_SERVO, 0, GEAR_3)
+    if gearPos == 1:
+      setServoPulse(TEST_SERVO, SERVO_MIN)
+#      pwm.setPWM(GEAR_SERVO, 0, 120)
+    elif gearPos == 2:
+      setServoPulse(TEST_SERVO, SERVO_MID)
+#      pwm.setPWM(GEAR_SERVO, 0, 200)
+    elif gearPos == 3:
+      setServoPulse(TEST_SERVO, SERVO_MAX)
+#      pwm.setPWM(GEAR_SERVO, 0, 280)
 
 def Steer(direction):
   global currentDirection
@@ -162,22 +191,23 @@ def Steer(direction):
   # direction is range between 1 to 9
   
   if direction == CENTER:
-    currentDirection = DIRECTION_CENTRE
+    currentDirection = SERVO_MID
   else:
     # calculate iteration amount
-    iteration = (DIRECTION_MAX - DIRECTION_MIN) / 8.0
+    iteration = (SERVO_MAX - SERVO_MIN) / 8.0
     
-    currentDirection = (iteration * (direction - 1.0)) + DIRECTION_MIN
+    currentDirection = (iteration * (direction - 1.0)) + SERVO_MIN
 
     # Check limits
-    if currentDirection < DIRECTION_MIN:
-      currentDirection = DIRECTION_MIN
-    elif currentDirection > DIRECTION_MAX:
-      currentDirection = DIRECTION_MAX
+    if currentDirection < SERVO_MIN:
+      currentDirection = SERVO_MIN
+    elif currentDirection > SERVO_MAX:
+      currentDirection = SERVO_MAX
 
   # Set the servo
   print "Direction = %d" % currentDirection
-  pwm.setPWM(STEERING_SERVO, 0, int(currentDirection))
+  setServoPulse(STEERING_SERVO, int(currentDirection))
+#  pwm.setPWM(STEERING_SERVO, 0, int(currentDirection))
     
   
     
