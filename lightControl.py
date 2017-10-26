@@ -24,24 +24,28 @@ FOGLIGHT = 9
 TAILLIGHT = 10
 BRAKELIGHT = 11
 
-GEAR_SERVO = 12
+STEERING_SERVO = 12
+GEAR_SERVO = 13
 THROTTLE_SERVO = 14
-STEERING_SERVO = 13
-TEST_SERVO = 15
+TEST_SERVO = 14
 
 HAZARDS = 99
 
-GEAR_1 = 170
-GEAR_2 = 220
-GEAR_3 = 400
+GEAR_1 = 1170
+GEAR_3 = 1550
+GEAR_2 = GEAR_3 - ((GEAR_3 - GEAR_1)/2)
 
-CENTER = 5  # Direction is based on a range of 1 to 9. 5 is centre
-currentDirection = 190.0
+THROTTLE_REV_MAX = 750
+THROTTLE_OFF = 900
+CRAWL = 1180
+THROTTLE_MAX = 2150
 
-SERVO_MIN = 460  # Min pulse length, us (tick 184/4096)
-SERVO_MAX = 2100  # Max pulse length, us  (tick 430/4096)
-SERVO_MID = SERVO_MAX - ((SERVO_MAX - SERVO_MIN)/2) # Midpoint pulse length, us
+STEERING_MIN = 460  # Min pulse length, us (tick 184/4096)
+STEERING_MAX = 2100  # Max pulse length, us  (tick 430/4096)
+STEERING_MID = STEERING_MAX - ((STEERING_MAX - STEERING_MIN)/2) # Midpoint pulse length, us
 FREQUENCY = 50 # cycle length, Hz
+CENTER = 5  # Direction is based on a range of 1 to 9. 5 is centre
+currentDirection = STEERING_MID
 
 pulseLength = 1000000 / FREQUENCY
 tick = pulseLength / 4096 # 12 bit resolution
@@ -51,14 +55,15 @@ def setServoPulse(channel, pulse):
   print "%d pulse, %d tick" % (pulse, tick)
   pwm.setPWM(channel, 0, pulse/tick)
 
-#pwm.setPWMFreq(cycle) # Set frequency
+#pwm.setPWMFreq(FREQUENCY) # Set frequency
 
+#pulse = THROTTLE_OFF
 #while (True):
   # cycle servo
 #  print "%d pulse" % pulse
 #  setServoPulse(TEST_SERVO, pulse)
 #  time.sleep(1)
-#  pulse += 20
+#  pulse -= 10
 #  setServoPulse(TEST_SERVO, servoMin)
 #  time.sleep(1)
 #  setServoPulse(TEST_SERVO, servoMid)
@@ -83,9 +88,10 @@ def Initialise():
 
     for x in range(0, 11):
         pwm.setPWM(x, 0, 0)
-        
+      
     ChangeGear(1)
     Steer(CENTER)
+    Throttle(0)
     
 def TurnLightsOn(led):
     TurnLightsOnImmediate(led)
@@ -176,13 +182,13 @@ class FlashingThread(threading.Thread):
             
 def ChangeGear(gearPos):
     if gearPos == 1:
-      setServoPulse(TEST_SERVO, SERVO_MIN)
+      setServoPulse(GEAR_SERVO, GEAR_1)
 #      pwm.setPWM(GEAR_SERVO, 0, 120)
     elif gearPos == 2:
-      setServoPulse(TEST_SERVO, SERVO_MID)
+      setServoPulse(GEAR_SERVO, GEAR_2)
 #      pwm.setPWM(GEAR_SERVO, 0, 200)
     elif gearPos == 3:
-      setServoPulse(TEST_SERVO, SERVO_MAX)
+      setServoPulse(GEAR_SERVO, GEAR_3)
 #      pwm.setPWM(GEAR_SERVO, 0, 280)
 
 def Steer(direction):
@@ -191,18 +197,18 @@ def Steer(direction):
   # direction is range between 1 to 9
   
   if direction == CENTER:
-    currentDirection = SERVO_MID
+    currentDirection = STEERING_MID
   else:
     # calculate iteration amount
-    iteration = (SERVO_MAX - SERVO_MIN) / 8.0
+    iteration = (STEERING_MAX - STEERING_MIN) / 8.0
     
-    currentDirection = (iteration * (direction - 1.0)) + SERVO_MIN
+    currentDirection = (iteration * (direction - 1.0)) + STEERING_MIN
 
     # Check limits
-    if currentDirection < SERVO_MIN:
-      currentDirection = SERVO_MIN
-    elif currentDirection > SERVO_MAX:
-      currentDirection = SERVO_MAX
+    if currentDirection < STEERING_MIN:
+      currentDirection = STEERING_MIN
+    elif currentDirection > STEERING_MAX:
+      currentDirection = STEERING_MAX
 
   # Set the servo
   print "Direction = %d" % currentDirection
@@ -210,7 +216,31 @@ def Steer(direction):
 #  pwm.setPWM(STEERING_SERVO, 0, int(currentDirection))
     
   
+def Throttle(position):
+  throttle = THROTTLE_OFF
+  if position > 0:
+    iteration = (THROTTLE_MAX - THROTTLE_OFF) / 8.0
+    throttle = (iteration * (position - 1.0)) + THROTTLE_OFF
+
+    # Check limits
+    if throttle < THROTTLE_OFF:
+      throttle = THROTTLE_OFF
+    elif throttle > THROTTLE_MAX:
+      throttle = THROTTLE_MAX
+
+  elif position < 0:
+    iteration = (THROTTLE_OFF - THROTTLE_REV_MAX) / 8.0
+    throttle = THROTTLE_OFF - (iteration * (position - 1.0))
+
+    # Check Limits
+    if throttle > THROTTLE_OFF:
+      throttle = THROTTLE_OFF
+    elif throttle < THROTTLE_REV_MAX:
+      throttle = THROTTLE_REV_MAX
     
+  # Set Servo
+  print "Throttle = %d" % throttle
+  setServoPulse(THROTTLE_SERVO, int(throttle))
     
 
 """
