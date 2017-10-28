@@ -37,11 +37,11 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 elif s.path == "/Spotlight?OFF":
                         print "Turning off SPOTLAMP"
                         lightControl.TurnLightsOff(lightControl.SPOTLIGHT)
-                elif s.path == "/Reverse?ON":
+                elif s.path == "/Backward?ON":
                         print "Turning on REVERSE"
                         lightControl.TurnLightsOn(lightControl.REVERSE_LIGHT)
                         lightControl.TurnLightsOff(lightControl.BRAKELIGHT)
-                elif s.path == "/Reverse?OFF":
+                elif s.path == "/Backward?OFF":
                         print "Turning off REVERSE"
                         lightControl.TurnLightsOff(lightControl.REVERSE_LIGHT)
                         lightControl.TurnLightsOn(lightControl.BRAKELIGHT)
@@ -76,15 +76,15 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
                 # SERVO CONTROL
                 
-                if s.path == "/Forward?ON":
+                if s.path.startswith("/Accelerate"):
+                        position = int(s.path[12])
                         print "MOVING FORWARD"
-                        #servoControl.Forward()
-                elif s.path == "/Forward?OFF":
-                        print "STOPPING"
-                elif s.path == "/Reverse?ON":
-                        print "MOVING BACKWARDS"
-                elif s.path == "/Reverse?OFF":
-                        print "STOPPING"
+                        lightControl.Throttle(position)
+                elif s.path.startswith("/Reverse"):
+                        position = int(s.path[9])
+                        position *= -1 # Reversing so negate
+                        print "REVERSING"
+                        lightControl.Throttle(position)                        
                         
                 elif s.path.startswith("/Gear"):
                         # Read the gear position

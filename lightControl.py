@@ -31,11 +31,11 @@ TEST_SERVO = 14
 
 HAZARDS = 99
 
-GEAR_1 = 1170
-GEAR_3 = 1550
+GEAR_3 = 1170
+GEAR_1 = 1550
 GEAR_2 = GEAR_3 - ((GEAR_3 - GEAR_1)/2)
 
-THROTTLE_REV_MAX = 750
+THROTTLE_REV_MAX = 770
 THROTTLE_OFF = 900
 CRAWL = 1180
 THROTTLE_MAX = 2150
@@ -183,13 +183,10 @@ class FlashingThread(threading.Thread):
 def ChangeGear(gearPos):
     if gearPos == 1:
       setServoPulse(GEAR_SERVO, GEAR_1)
-#      pwm.setPWM(GEAR_SERVO, 0, 120)
     elif gearPos == 2:
       setServoPulse(GEAR_SERVO, GEAR_2)
-#      pwm.setPWM(GEAR_SERVO, 0, 200)
     elif gearPos == 3:
       setServoPulse(GEAR_SERVO, GEAR_3)
-#      pwm.setPWM(GEAR_SERVO, 0, 280)
 
 def Steer(direction):
   global currentDirection
@@ -213,7 +210,6 @@ def Steer(direction):
   # Set the servo
   print "Direction = %d" % currentDirection
   setServoPulse(STEERING_SERVO, int(currentDirection))
-#  pwm.setPWM(STEERING_SERVO, 0, int(currentDirection))
     
   
 def Throttle(position):
@@ -229,8 +225,8 @@ def Throttle(position):
       throttle = THROTTLE_MAX
 
   elif position < 0:
-    iteration = (THROTTLE_OFF - THROTTLE_REV_MAX) / 8.0
-    throttle = THROTTLE_OFF - (iteration * (position - 1.0))
+    iteration = (THROTTLE_OFF - THROTTLE_REV_MAX) / 4.0
+    throttle = THROTTLE_OFF - (iteration * ((position * -1) - 1.0))
 
     # Check Limits
     if throttle > THROTTLE_OFF:
@@ -243,16 +239,3 @@ def Throttle(position):
   setServoPulse(THROTTLE_SERVO, int(throttle))
     
 
-"""
-while (True):
-  print "lights on"
-  TurnLightsOn(4)
-  TurnLightsOn(5)
-  TurnLightsOn(7)
-  time.sleep(5)
-  print "lights off"
-  TurnLightsOff(4)
-  TurnLightsOff(5)
-  TurnLightsOff(7)
-  time.sleep(5)
-"""
